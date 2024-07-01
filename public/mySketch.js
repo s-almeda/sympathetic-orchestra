@@ -1,0 +1,436 @@
+let sound;
+//let in;
+let amp;
+
+
+
+/* Modify the basic parameters. */
+const n_parts = 18;
+const n_grid_X = 16, n_grid_Y = 7;
+const sizeX = 1440, sizeY = 900;
+const globalX = 50, globalY = 50; // The margin size. 
+
+/* Defining the objects and arrays according to the basic parameters above. 
+   No need to modify! */
+let soundfilePtr = [];
+let ampPtr = [];
+let unitAttributes = Array.from({ length: n_parts }, () => Array(4).fill(0));
+let textAttributes = Array.from({ length: n_parts }, () => Array(2).fill(0));
+let colors = Array.from({ length: n_parts }, () => Array(3).fill(0));
+let ampvalue = Array(n_parts).fill(0); // The actual values of the output of the soundtracks. 
+let ampVals = Array(n_parts).fill(0); // The input values to correct the volume of the soundtracks. 
+let ampValCoef = 1;
+
+let leap;
+
+const unitX = (sizeX - globalX * 2) / n_grid_X;
+const unitY = (sizeY - globalY * 2) / n_grid_Y;
+const rectRad = 40;
+const dX = unitX / 4;
+const dY = unitY / 4; // The distance between grids when drawing the rectangles. 
+
+let playTime = 0;
+let lastTime;
+
+let lookupTable = Array.from({ length: n_grid_Y + 1 }, () => Array(n_grid_X + 1).fill(0));
+
+let states = [0, 0];
+
+/* Parameters related to analyzing user inputs. */ 
+let minY = 0;
+let maxY = sizeY;
+let minX = 0;
+let maxX = sizeX;
+const grabThreshold = 0.8;
+const releaseThreshold = 0;
+const lowVoiceVal = 0.01;
+let isPlaying = false;
+
+const gestures = [];
+let numGestures = gestures.length;
+let cur = 0;
+const totalTime = 164000; // Modify according to the duration of the LONGEST soundtrack. 
+let gestureFlags = Array(n_parts).fill(0);
+
+/* Defining the GUI. */
+let units = [[2, 5, 1, 2, 255],
+             [2, 7, 1, 2, 255],
+             [2, 9, 1, 2, 255],
+             [2, 11, 1, 2, 255],
+             [0, 8, 1, 4, 255], 
+             [1, 8, 1, 2, 255], 
+             [1, 10, 1, 2, 255],
+             [1, 12, 1, 1, 255],
+             [0, 6, 2, 2, 255],
+             [0, 4, 2, 2, 255],
+             [1, 3, 2, 1, 255],
+             [5, 0, 2, 7, 255],
+             [3, 1, 2, 6, 255],
+             [3, 7, 2, 4, 255],
+             [5, 9, 2, 7, 255],
+             [3, 11, 2, 4, 255],
+             [2, 4, 1, 1, 255],
+             [5, 7, 2, 2, 100]
+            ];
+// units: {Vertical Axis, Horizontal Axis, Vertical Length, Horizontal Axis, Color(0-255, Gray)}
+const texts = ["Flute",
+               "Oboe",
+               "Clarinet",
+               "Bassoon",
+               "French Horns",
+               "Trumpets",
+               "Trombones",
+               "Tuba",
+               "Timpani",
+               "Percussion",
+               "Piano",
+               "Violin 1",
+               "Violin 2",
+               "Viola",
+               "Cello",
+               "Bass",
+               "Harp",
+               "Conductor"
+              ];
+// Must ensure: texts.length == units.length
+const muted = [false,
+               false,
+               false,
+               false,
+               false,
+               false,
+               false,
+               false,
+               false,
+               true,
+               false,
+               false,
+               false,
+               false,
+               false,
+               false,
+               true,
+               true,
+              ];
+
+/* Function to draw the GUI. */
+function deriveAttributes() {
+  // Called only in preprocessing. 
+  for (let i = units.length - 1; i > -1; --i) {
+    unitAttributes[i][0] = globalX + units[i][1] * unitX;
+    unitAttributes[i][1] = globalY + units[i][0] * unitY;
+    unitAttributes[i][2] = units[i][3] * unitX - dX;
+    unitAttributes[i][3] = units[i][2] * unitY - dY;
+    textAttributes[i][0] = globalX + (units[i][1] * 2 + units[i][3]) * unitX / 2 - 8 * texts[i].length;
+    textAttributes[i][1] = globalY + (units[i][0] * 2 + units[i][2]) * unitY / 2 - 10;
+    colors[i][0] = (units[i][4] < 128) ? 255 : 0;
+    colors[i][1] = colors[i][0];
+    colors[i][2] = colors[i][0];
+  }
+};
+
+function _deriveColors() {
+  //_updateAmpVal();
+  for (let i = units.length - 1; i > -1; --i) {
+    colors[i][0] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
+    colors[i][1] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
+    colors[i][2] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
+  }
+};
+
+function drawParts() {
+  noStroke();
+  _deriveColors();
+	
+  for (let i = units.length - 1; i > -1; --i) {
+    // Big Units. 
+    if (units[i][4] === -1) fill(150, 200, 175);
+    else if (gestureFlags[i] === 0) fill(255, 90, 90);
+    else fill(units[i][4], units[i][4], units[i][4]);
+    rect(unitAttributes[i][0], unitAttributes[i][1], unitAttributes[i][2], unitAttributes[i][3], rectRad);
+    
+    // Small units. 
+    if (i !== 17) {
+      fill(colors[i][0], colors[i][1], colors[i][2]);
+      for (let j = units[i][2] - 1; j > -1; --j) {
+        for (let k = units[i][3] - 1; k > -1; --k) {
+          rect(unitAttributes[i][0] + k * unitX + dX / 2, unitAttributes[i][1] + j * unitY + dY / 2, unitX - 2 * dX, unitY - 2 * dY, rectRad);
+        }
+      }
+    }
+    
+    // Text. 
+    let c = (units[i][4] < 128) ? 255 : 0;
+    fill(c, c, c);
+    textSize(20);
+    text(texts[i], textAttributes[i][0], textAttributes[i][1]);
+  }
+};
+
+/* Functions controlling the soundtracks. */
+function playAll() {
+  // Start Playing all soundtracks.
+  if (isPlaying || playTime > totalTime) return;
+  
+  for (let i = soundfilePtr.length - 1; i > -1; --i) {
+    if (!muted[i]) soundfilePtr[i].play();
+  }
+  isPlaying = true;
+};
+
+function pauseAll() {
+  // Pause all soundtracks.
+  if (!isPlaying || playTime > totalTime) return;
+  for (let i = soundfilePtr.length - 1; i > -1; --i) {
+    if (!muted[i]) soundfilePtr[i].pause();
+  }
+  isPlaying = false;
+};
+
+function setAmp(lowerVoice) {
+  // Update the amplitudes for all soundtracks.
+  if (lowerVoice) {
+    for (let i = units.length - 1; i > -1; --i) {
+      if (i === 10) soundfilePtr[i].amp(1); 
+      else soundfilePtr[i].amp(lowVoiceVal);
+    }
+  } else {
+    for (let i = units.length - 1; i > -1; --i) {
+      if (i === 10) soundfilePtr[i].amp(1);
+      else soundfilePtr[i].amp(gestureFlags[i] === 1 ? ampVals[i] * ampValCoef : lowVoiceVal);
+    }
+  }
+};
+
+function _updateAmpVal() {
+  for (let i = units.length - 1; i > -1; --i) {
+    ampvalue[i] = ampPtr[i].analyze();
+  }
+};
+
+/* Functions recording time. */
+function updateTime() {
+  let curTime = millis();
+  let timeElapsed = curTime - lastTime;
+  lastTime = curTime;
+  if (isPlaying) playTime += timeElapsed;
+}
+
+function renewGestureFlags() {
+  if (cur === numGestures) return;
+  if (playTime > gestures[cur][0]) {
+    gestureFlags[int(gestures[cur++][1])] = 0;
+  }
+}
+
+/* Auxiliary Functions. */
+function _normalize(x, inf, sup, target_inf, target_sup) {
+  return (x - inf) * (target_sup - target_inf) / (sup - inf) + target_inf;
+};
+
+function deriveLookupTable() {
+  for (let i = lookupTable.length - 1; i > -1; --i) {
+    for (let j = lookupTable[0].length - 1; j > -1; --j) {
+      lookupTable[i][j] = -1;
+    }
+  }
+  
+  for (let i = units.length - 1; i > -1; --i) {
+    for (let j = units[i][0]; j < units[i][0] + units[i][2]; ++j) {
+      for (let k = units[i][1]; k < units[i][1] + units[i][3]; ++k) {
+        lookupTable[j][k] = i;
+      }
+    }
+  }
+};
+
+/* Main Functions. */
+function setup() {
+	
+	/* setup handsfree?? */
+	
+	const handsfree = new Handsfree({hands: true})
+  handsfree.enablePlugins('browser')
+  handsfree.plugin.pinchScroll.disable()
+	handsfree.start()
+
+  for (let i = n_parts - 1; i > -1; --i) gestureFlags[i] = 1;
+  /* Initialize the LeapMotion and Sound objects. */
+  //leap = new LeapMotion(this);
+  console.log("Load soundtracks.");
+  for (let i = units.length - 1; i > -1; --i) {
+    console.log(i);
+    ampPtr[i] = new p5.Amplitude();
+    soundfilePtr[i] = loadSound("./shortened/" + texts[i] + ".mp3");
+    ampPtr[i].setInput(soundfilePtr[i]);
+    ampVals[i] = 1;
+  }
+
+  /* Initialize the GUI. */
+  createCanvas(windowWidth, windowHeight);
+  deriveAttributes();
+  deriveLookupTable();
+
+  /* Other Settings. */
+  //frameRate(60);
+
+  /* Start the Soundtracks. */
+  //playAll();
+
+  /* Initialize Timer. */
+  lastTime = millis();
+	
+};
+
+function draw() {
+
+  console.log(handsfree.data.hands.landmarks[0].x);
+  console.log(handsfree.data.hands.landmarks[0].y);
+	
+	
+  /* Initialize flags. */
+  let playFlag = true;
+  let lowerVoice = false;
+  let target = -1;
+  let tmp = 255;
+  states[0] = -1; states[1] = -1;
+    
+  let leftHand = -1;
+  let rightHand = -1;
+  
+  /* Renew playtime and gestures. */
+  updateTime();
+  renewGestureFlags();
+  /*
+  // /* Capture user inputs. */
+  // let hands = leap.getHands();
+  // let handCount = hands.length;
+  
+  // /* Identify the state of both hands. */
+  // for (let i = hands.length - 1; i > -1; --i) {
+  //   if (hands[i].isLeft()) leftHand = i;
+  //   else if (hands[i].isRight()) rightHand = i;
+    
+  //   if (hands[i].isLeft()) {
+  //     if (hands[i].getGrabStrength() <= releaseThreshold) states[0] = 0;
+  //     else if (hands[i].getGrabStrength() > grabThreshold) states[0] = 2;
+  //     else states[0] = 1;
+  //   }
+  //   else if (hands[i].isRight()) {
+  //     let num_fingers = hands[i].getOutstretchedFingers().length;
+  //     if (0 < num_fingers && num_fingers <= 2) states[1] = 0;
+  //     else if (hands[i].getGrabStrength() > grabThreshold) states[1] = 2;
+  //     else states[1] = 1;
+  //   }
+  // }
+  
+//   /* Processing the flags. */
+//   // 1. playFlag
+//   if (handCount === 0) playFlag = false;
+  
+//   // 2. Volume related flags.
+//   if (states[0] === 2 || states[1] === 2) lowerVoice = true;
+  
+//   if (!lowerVoice) {
+//     if (leftHand !== -1 && rightHand !== -1) {
+//       /* 
+//       Check if the right hand is pointing at a specific part: 
+//       If part **k** is pointed at, 
+//         the absolute Y coordinate of the LEFT HAND decides the volume of the pointed part. 
+//       If NO part is pointed at, 
+//         Check if left hand is open, 
+//           If so, the absolute Y coordinate decides the overall volume of all parts. 
+//           Else, do nothing. 
+//       */ 
+//       if ((target = isPointingAt(hands[rightHand])) !== -1) {
+//         ampVals[target] = max(min(_normalize(hands[leftHand].getPosition().array()[1], maxY, minY, 0, 1), 1), 0);
+//         tmp = units[target][4];
+//         units[target][4] = -1;
+//       } else if (isOpen(hands[leftHand])) {
+//         ampValCoef = max(min(_normalize(hands[leftHand].getPosition().array()[1], maxY, minY, 0, 1), 1), 0);
+//       }
+//     }
+//   }
+  
+//   // Resolve gesture flags. 
+//   let gestureTarget;
+//   for (let hand of hands) {
+//     if ((gestureTarget = isPlacedAt(hand)) !== -1) 
+//       gestureFlags[gestureTarget] = 1;
+//   }
+  
+//   /* Execute according to the flags. */
+//   // 1. playFlag
+//   if (playFlag) playAll();
+//   else pauseAll();
+  
+//   // 2. Volume related flags. 
+//   setAmp(lowerVoice);
+  
+//   /* Update the GUI. */
+		 background(200);
+		 drawParts();
+  
+//   // Draw the cursors (hands). 
+   let LX = 0, LY = 0, RX = 0, RY = 0;
+  
+//   if (leftHand !== -1) {
+//     LX = hands[leftHand].getPosition().array()[0]; 
+//     LY = hands[leftHand].getPosition().array()[1];
+//   }
+//   if (rightHand !== -1) {
+//     let fingers = hands[rightHand].getOutstretchedFingers();
+//     if (states[1] === 0 && 0 < fingers.length && fingers.length <= 2) {
+//       RX = fingers[0].getPosition().array()[0];
+//       RY = fingers[0].getPosition().array()[1];
+//     } else {
+//       RX = hands[rightHand].getPosition().array()[0];
+//       RY = hands[rightHand].getPosition().array()[1];
+//     }
+//   }
+  
+  switch (states[0]) {
+    case 0:
+      fill(255, 200, 50);
+      rect(LX, LY, 30, 10, 4);
+      break;
+    case 1:
+      fill(50, 50, 200);
+      ellipse(LX, LY, 20, 20);
+      break;
+    case 2:
+      fill(150, 50, 150);
+      ellipse(LX, LY, 6, 6);
+      break;
+  }
+  
+  switch (states[1]) {
+    case 0:
+      fill(50, 150, 100);
+      triangle(RX, RY, RX + 10, RY - 20, RX + 20, RY - 10);
+      break;
+    case 1:
+      fill(50, 100, 100);
+      ellipse(RX, RY, 20, 20);
+      break;
+    case 2:
+      fill(125, 50, 125);
+      ellipse(RX, RY, 6, 6);
+      break;
+  }
+
+  /* Some post ops. */
+  if (target !== -1) units[target][4] = tmp;
+}
+
+// document.addEventListener('handsfree-data', event => {
+//   const data = event.detail
+//   if (!data.hands) return
+
+//   // Left hand, person #1
+//   console.log(handsfree.data.hands.landmarks[0].x);
+// console.log(handsfree.data.hands.landmarks[0].y);
+//   // Right hand, person #1
+//   //handsfree.data.hands.landmarks[1]
+
+// })
