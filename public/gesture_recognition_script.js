@@ -1,7 +1,6 @@
-// public/script.js
-
 import {
   GestureRecognizer,
+  HandLandmarker,
   FilesetResolver,
   DrawingUtils
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
@@ -9,11 +8,18 @@ import {
 document.addEventListener("DOMContentLoaded", () => {
   const demosSection = document.getElementById("demos");
   let gestureRecognizer;
+  let handLandmarker;
   let runningMode = "IMAGE";
   let enableWebcamButton;
   let webcamRunning = false;
   const videoHeight = "360px";
   const videoWidth = "480px";
+
+  const video = document.getElementById("webcam");
+  const canvasElement = document.getElementById("output_canvas");
+  const canvasCtx = canvasElement.getContext("2d");
+  const gestureOutput = document.getElementById("gesture_output");
+  const handLandmarkOutput = document.getElementById("hand_landmark_output");
 
   // Initialize the gesture recognizer
   const createGestureRecognizer = async () => {
@@ -30,6 +36,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
   createGestureRecognizer();
+
+  // Initialize the hand landmarker
+  const createHandLandmarker = async () => {
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+    );
+    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+        delegate: "GPU"
+      },
+      runningMode: runningMode,
+      numHands: 2
+    });
+  };
+  createHandLandmarker();
 
   // Handle click on image containers
   const imageContainers = document.getElementsByClassName("detectOnClick");
@@ -114,11 +136,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Webcam functionality
-  const video = document.getElementById("webcam");
-  const canvasElement = document.getElementById("output_canvas");
-  const canvasCtx = canvasElement.getContext("2d");
-  const gestureOutput = document.getElementById("gesture_output");
-
   function hasGetUserMedia() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   }
@@ -131,8 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function enableCam(event) {
-    if (!gestureRecognizer) {
-      alert("Please wait for gestureRecognizer to load");
+    if (!gestureRecognizer || !handLandmarker) {
+      alert("Please wait for models to load");
       return;
     }
 
@@ -161,51 +178,82 @@ document.addEventListener("DOMContentLoaded", () => {
     if (runningMode === "IMAGE") {
       runningMode = "VIDEO";
       await gestureRecognizer.setOptions({ runningMode: "VIDEO" });
+      await handLandmarker.setOptions({ runningMode: "VIDEO" });
     }
     let nowInMs = Date.now();
     if (video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
       results = gestureRecognizer.recognizeForVideo(video, nowInMs);
-    }
+      const handLandmarkerResults = await handLandmarker.detectForVideo(video, nowInMs);
 
-    canvasCtx.save();
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    const drawingUtils = new DrawingUtils(canvasCtx);
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      const drawingUtils = new DrawingUtils(canvasCtx);
 
-    canvasElement.style.height = videoHeight;
-    webcamElement.style.height = videoHeight;
-    canvasElement.style.width = videoWidth;
-    webcamElement.style.width = videoWidth;
+      canvasElement.style.height = videoHeight;
+      webcamElement.style.height = videoHeight;
+      canvasElement.style.width = videoWidth;
+      webcamElement.style.width = videoWidth;
 
-    if (results.landmarks) {
-      for (const landmarks of results.landmarks) {
-        drawingUtils.drawConnectors(
-          landmarks,
-          GestureRecognizer.HAND_CONNECTIONS,
-          {
-            color: "#00FF00",
-            lineWidth: 5
-          }
-        );
-        drawingUtils.drawLandmarks(landmarks, {
-          color: "#FF0000",
-          lineWidth: 2
-        });
+      if (results.landmarks) {
+        for (const landmarks of results.landmarks) {
+          drawingUtils.drawConnectors(
+            landmarks,
+            GestureRecognizer.HAND_CONNECTIONS,
+            {
+              color: "#00FF00",
+              lineWidth: 5
+            }
+          );
+          drawingUtils.drawLandmarks(landmarks, {
+            color: "#FF0000",
+            lineWidth: 2
+          });
+        }
+      }
+
+      if (handLandmarkerResults.landmarks) {
+        let handLandmarkText = "";
+        for (const landmarks of handLandmarkerResults.landmarks) {
+          landmarks.forEach((landmark, index) => {
+            handLandmarkText += `Landmark ${index}: X=${landmark.x.toFixed(2)}, Y=${landmark.y.toFixed(2)}, Z=${landmark.z.toFixed(2)}<br>`;
+          });
+          handLandmarkText += "<br>";
+        }
+        handLandmarkOutput.innerHTML = handLandmarkText;
+
+        for (const landmarks of handLandmarkerResults.landmarks) {
+          drawingUtils.drawConnectors(
+            landmarks,
+            HandLandmarker.HAND_CONNECTIONS,
+            {
+              color: "#00FF00",
+              lineWidth: 5
+            }
+          );
+          drawingUtils.drawLandmarks(landmarks, {
+            color: "#FF0000",
+            lineWidth: 2
+          });
+        }
+      }
+
+      canvasCtx.restore();
+
+      if (results.gestures.length > 0) {
+        gestureOutput.style.display = "block";
+        gestureOutput.style.width = videoWidth;
+        const categoryName = results.gestures[0][0].categoryName;
+        const categoryScore = parseFloat(
+          results.gestures[0][0].score * 100
+        ).toFixed(2);
+        const handedness = results.handednesses[0][0].displayName;
+        gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`;
+      } else {
+        gestureOutput.style.display = "none";
       }
     }
-    canvasCtx.restore();
-    if (results.gestures.length > 0) {
-      gestureOutput.style.display = "block";
-      gestureOutput.style.width = videoWidth;
-      const categoryName = results.gestures[0][0].categoryName;
-      const categoryScore = parseFloat(
-        results.gestures[0][0].score * 100
-      ).toFixed(2);
-      const handedness = results.handednesses[0][0].displayName;
-      gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`;
-    } else {
-      gestureOutput.style.display = "none";
-    }
+
     if (webcamRunning === true) {
       window.requestAnimationFrame(predictWebcam);
     }

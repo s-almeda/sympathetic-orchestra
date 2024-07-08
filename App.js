@@ -38,8 +38,8 @@ app.get('/player', function (req, res) {
     res.sendFile(publicPath + '/player/index.html');
 });
 //depending on what url extension the user navigates to, send them the respective html file. 
-app.get('/a', function (req, res) {
-    res.sendFile(publicPath + '/a.html');
+app.get('/hands', function (req, res) {
+    res.sendFile(publicPath + '/hands.html');
 });
 app.get('/b', function (req, res) {
     res.sendFile(publicPath + '/b.html');
