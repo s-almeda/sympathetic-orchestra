@@ -248,15 +248,7 @@ function deriveLookupTable() {
 /* Main Functions. */
 function setup() {
 	
-	/* setup handsfree?? */
-	
-  handsfree = new Handsfree({hands: true});
-	
-  handsfree.enablePlugins('browser')
-  handsfree.plugin.pinchScroll.disable()
-	handsfree.start()
 
-  //console.log(handsfree.data.hands.landmarks[0]);
 
   for (let i = n_parts - 1; i > -1; --i) gestureFlags[i] = 1;
   /* Initialize the LeapMotion and Sound objects. */
@@ -305,10 +297,10 @@ function draw() {
   /* Renew playtime and gestures. */
   updateTime();
   renewGestureFlags();
-		 background(200);
-		 drawParts();
-     drawHands();
-  
+	 background(200);
+	 drawParts();
+   //drawHands();
+
 
 
 
