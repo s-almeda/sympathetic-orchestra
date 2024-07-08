@@ -3,6 +3,7 @@ let sound;
 let amp;
 
 
+let handsfree;
 
 /* Modify the basic parameters. */
 const n_parts = 18;
@@ -249,10 +250,13 @@ function setup() {
 	
 	/* setup handsfree?? */
 	
-	const handsfree = new Handsfree({hands: true})
+  handsfree = new Handsfree({hands: true});
+	
   handsfree.enablePlugins('browser')
   handsfree.plugin.pinchScroll.disable()
 	handsfree.start()
+
+  //console.log(handsfree.data.hands.landmarks[0]);
 
   for (let i = n_parts - 1; i > -1; --i) gestureFlags[i] = 1;
   /* Initialize the LeapMotion and Sound objects. */
@@ -284,8 +288,8 @@ function setup() {
 
 function draw() {
 
-  console.log(handsfree.data.hands.landmarks[0].x);
-  console.log(handsfree.data.hands.landmarks[0].y);
+  
+  
 	
 	
   /* Initialize flags. */
@@ -370,57 +374,61 @@ function draw() {
 //   /* Update the GUI. */
 		 background(200);
 		 drawParts();
+     drawHands();
   
-//   // Draw the cursors (hands). 
-   let LX = 0, LY = 0, RX = 0, RY = 0;
+// //   // Draw the cursors (hands). 
+//    let LX = 0, LY = 0, RX = 0, RY = 0;
   
-//   if (leftHand !== -1) {
-//     LX = hands[leftHand].getPosition().array()[0]; 
-//     LY = hands[leftHand].getPosition().array()[1];
+// //   if (leftHand !== -1) {
+// //     LX = hands[leftHand].getPosition().array()[0]; 
+// //     LY = hands[leftHand].getPosition().array()[1];
+// //   }
+// //   if (rightHand !== -1) {
+// //     let fingers = hands[rightHand].getOutstretchedFingers();
+// //     if (states[1] === 0 && 0 < fingers.length && fingers.length <= 2) {
+// //       RX = fingers[0].getPosition().array()[0];
+// //       RY = fingers[0].getPosition().array()[1];
+// //     } else {
+// //       RX = hands[rightHand].getPosition().array()[0];
+// //       RY = hands[rightHand].getPosition().array()[1];
+// //     }
+// //   }
+  
+//   switch (states[0]) {
+//     case 0:
+//       fill(255, 200, 50);
+//       rect(LX, LY, 30, 10, 4);
+//       break;
+//     case 1:
+//       fill(50, 50, 200);
+//       ellipse(LX, LY, 20, 20);
+//       break;
+//     case 2:
+//       fill(150, 50, 150);
+//       ellipse(LX, LY, 6, 6);
+//       break;
 //   }
-//   if (rightHand !== -1) {
-//     let fingers = hands[rightHand].getOutstretchedFingers();
-//     if (states[1] === 0 && 0 < fingers.length && fingers.length <= 2) {
-//       RX = fingers[0].getPosition().array()[0];
-//       RY = fingers[0].getPosition().array()[1];
-//     } else {
-//       RX = hands[rightHand].getPosition().array()[0];
-//       RY = hands[rightHand].getPosition().array()[1];
-//     }
+  
+//   switch (states[1]) {
+//     case 0:
+//       fill(50, 150, 100);
+//       triangle(RX, RY, RX + 10, RY - 20, RX + 20, RY - 10);
+//       break;
+//     case 1:
+//       fill(50, 100, 100);
+//       ellipse(RX, RY, 20, 20);
+//       break;
+//     case 2:
+//       fill(125, 50, 125);
+//       ellipse(RX, RY, 6, 6);
+//       break;
 //   }
-  
-  switch (states[0]) {
-    case 0:
-      fill(255, 200, 50);
-      rect(LX, LY, 30, 10, 4);
-      break;
-    case 1:
-      fill(50, 50, 200);
-      ellipse(LX, LY, 20, 20);
-      break;
-    case 2:
-      fill(150, 50, 150);
-      ellipse(LX, LY, 6, 6);
-      break;
-  }
-  
-  switch (states[1]) {
-    case 0:
-      fill(50, 150, 100);
-      triangle(RX, RY, RX + 10, RY - 20, RX + 20, RY - 10);
-      break;
-    case 1:
-      fill(50, 100, 100);
-      ellipse(RX, RY, 20, 20);
-      break;
-    case 2:
-      fill(125, 50, 125);
-      ellipse(RX, RY, 6, 6);
-      break;
-  }
 
-  /* Some post ops. */
-  if (target !== -1) units[target][4] = tmp;
+//   /* Some post ops. */
+//   if (target !== -1) units[target][4] = tmp;
+
+
+
 }
 
 // document.addEventListener('handsfree-data', event => {
@@ -434,3 +442,48 @@ function draw() {
 //   //handsfree.data.hands.landmarks[1]
 
 // })
+
+
+function drawHands () {
+  // fill(0)
+  // rect(windowWidth/2, windowHeight/2, 500,500);
+  const hands = handsfree.data?.hands
+  
+  // Bail if we don't have anything to draw
+  if (!hands?.landmarks) return
+  
+  // Draw keypoints
+  hands.landmarks.forEach((hand, handIndex) => {
+    hand.forEach((landmark, landmarkIndex) => {
+      // Set color
+      // @see https://handsfree.js.org/ref/model/hands.html#data
+      if (colorMap[handIndex]) {
+        switch (landmarkIndex) {
+          case 8: fill(colorMap[handIndex][0]); break
+          case 12: fill(colorMap[handIndex][1]); break
+          case 16: fill(colorMap[handIndex][2]); break
+          case 20: fill(colorMap[handIndex][3]); break
+          default:
+            fill(color(255, 255, 255))
+        }                
+      }
+      // Set stroke
+      if (handIndex === 0 && landmarkIndex === 8) {
+        stroke(color(255, 255, 255))
+        strokeWeight(5)
+        circleSize = 40
+      } else {
+        stroke(color(0, 0, 0))
+        strokeWeight(0)
+        circleSize = 10
+      }
+      
+      circle(
+        // Flip horizontally
+        sketch.width - landmark.x * sketch.width,
+        landmark.y * sketch.height,
+        circleSize
+      )
+    })
+  })
+}
