@@ -8,7 +8,7 @@ let isPaused = false;
 function preload() {
   for (let i = 0; i < instruments.length; i++) {
     let instrument = instruments[i];
-    sounds[instrument] = loadSound(instrument + '.mp3', soundLoaded);
+    sounds[instrument] = loadSound('soundfiles/' + instrument + '.mp3', soundLoaded);
   }
 }
 

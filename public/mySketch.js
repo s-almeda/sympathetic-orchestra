@@ -1,9 +1,32 @@
 let sound;
-//let in;
 let amp;
 
+let sounds = {};
+let sliders = {};
+let allLoaded = false;
+let masterVolumeSlider;
+let isPaused = false;
 
-let handsfree;
+/* Preload sound files */
+function preload() {
+  for (let i = 0; i < texts.length; i++) {
+    let instrument = texts[i];
+    sounds[instrument] = loadSound('soundfiles/' + instrument + '.mp3', soundLoaded);
+  }
+}
+
+function soundLoaded() {
+  let loadedCount = 0;
+  for (let instrument in sounds) {
+    if (sounds[instrument].isLoaded()) {
+      loadedCount++;
+    }
+  }
+  if (loadedCount === texts.length) {
+    allLoaded = true;
+    console.log("All sounds loaded successfully");
+  }
+}
 
 /* Modify the basic parameters. */
 const n_parts = 18;
@@ -21,8 +44,6 @@ let colors = Array.from({ length: n_parts }, () => Array(3).fill(0));
 let ampvalue = Array(n_parts).fill(0); // The actual values of the output of the soundtracks. 
 let ampVals = Array(n_parts).fill(0); // The input values to correct the volume of the soundtracks. 
 let ampValCoef = 1;
-
-let leap;
 
 const unitX = (sizeX - globalX * 2) / n_grid_X;
 const unitY = (sizeY - globalY * 2) / n_grid_Y;
@@ -131,7 +152,6 @@ function deriveAttributes() {
 };
 
 function _deriveColors() {
-  //_updateAmpVal();
   for (let i = units.length - 1; i > -1; --i) {
     colors[i][0] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
     colors[i][1] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
@@ -204,10 +224,10 @@ function setAmp(lowerVoice) {
 };
 
 function _updateAmpVal() {
-  for (let i = units.length - 1; i > -1; --i) {
-    ampvalue[i] = ampPtr[i].analyze();
+  for (let i = 0; i < texts.length; i++) {
+    ampvalue[i] = ampPtr[i].getLevel();
   }
-};
+}
 
 /* Functions recording time. */
 function updateTime() {
@@ -247,25 +267,58 @@ function deriveLookupTable() {
 
 /* Main Functions. */
 function setup() {
-	
-
-
   for (let i = n_parts - 1; i > -1; --i) gestureFlags[i] = 1;
   /* Initialize the LeapMotion and Sound objects. */
   //leap = new LeapMotion(this);
   console.log("Load soundtracks.");
-  for (let i = units.length - 1; i > -1; --i) {
+  for (let i = texts.length - 1; i > -1; --i) {
     console.log(i);
     ampPtr[i] = new p5.Amplitude();
-    soundfilePtr[i] = loadSound("./shortened/" + texts[i] + ".mp3");
-    ampPtr[i].setInput(soundfilePtr[i]);
-    ampVals[i] = 1;
+    soundfilePtr[i] = loadSound("./shortened/" + texts[i] + ".mp3", () => {
+      ampPtr[i].setInput(soundfilePtr[i]);
+      ampVals[i] = 1;
+    });
   }
 
   /* Initialize the GUI. */
   createCanvas(windowWidth, windowHeight);
   deriveAttributes();
   deriveLookupTable();
+
+  /* Create GUI elements */
+  let playButton = createButton('Play All');
+  playButton.position(10, 10);
+  playButton.mousePressed(playAllSounds);
+
+  let pauseButton = createButton('Pause All');
+  pauseButton.position(80, 10);
+  pauseButton.mousePressed(pauseAllSounds);
+
+  let resumeButton = createButton('Resume All');
+  resumeButton.position(150, 10);
+  resumeButton.mousePressed(resumeAllSounds);
+
+  masterVolumeSlider = createSlider(0, 1, 0.5, 0.01); // Min, Max, Initial value, Step
+  masterVolumeSlider.position(150, 40);
+  masterVolumeSlider.input(setMasterVolume);
+
+  let masterLabel = createDiv('Master Volume');
+  masterLabel.position(10, 35);
+
+  let yOffset = 70; // Starting position for individual sliders
+  for (let i = 0; i < texts.length; i++) {
+    let instrument = texts[i];
+    
+    let label = createDiv(instrument);
+    label.position(10, yOffset);
+    
+    let slider = createSlider(0, 1, 0.5, 0.01);
+    slider.position(150, yOffset);
+    slider.input(() => setVolume(instrument));
+    
+    sliders[instrument] = slider;
+    yOffset += 30; // Move to the next position
+  }
 
   /* Other Settings. */
   //frameRate(60);
@@ -275,15 +328,9 @@ function setup() {
 
   /* Initialize Timer. */
   lastTime = millis();
-	
 };
 
 function draw() {
-
-  
-  
-	
-	
   /* Initialize flags. */
   let playFlag = true;
   let lowerVoice = false;
@@ -297,14 +344,75 @@ function draw() {
   /* Renew playtime and gestures. */
   updateTime();
   renewGestureFlags();
-	 background(200);
-	 drawParts();
-   //drawHands();
+  background(200);
 
+  /* Update amplitude values */
+  _updateAmpVal();
 
-
-
+  /* Draw parts */
+  drawParts();
+  //drawHands();
 }
 
 
+/* Functions from player start */
+function playAllSounds() {
+  // Ensure the AudioContext is resumed on user gesture
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+  
+  if (allLoaded) {
+    let currentTime = getAudioContext().currentTime;
+    for (let instrument in sounds) {
+      if (sounds.hasOwnProperty(instrument)) {
+        sounds[instrument].playMode('restart');  // Ensure the sound restarts on play
+        sounds[instrument].play(currentTime + 0.1); // Play all sounds at the same time after 0.1 second
+      }
+    }
+    isPaused = false;
+  } else {
+    console.log("Sounds are not fully loaded yet");
+  }
+}
 
+function pauseAllSounds() {
+  if (allLoaded) {
+    for (let instrument in sounds) {
+      if (sounds.hasOwnProperty(instrument)) {
+        sounds[instrument].pause();  // Pause the sound
+      }
+    }
+    isPaused = true;
+  } else {
+    console.log("Sounds are not fully loaded yet");
+  }
+}
+
+function resumeAllSounds() {
+  if (allLoaded && isPaused) {
+    for (let instrument in sounds) {
+      if (sounds.hasOwnProperty(instrument)) {
+        sounds[instrument].play();
+      }
+    }
+    isPaused = false;
+  } else {
+    console.log("Sounds are not fully loaded yet or not paused");
+  }
+}
+
+function setVolume(instrument) {
+  let volume = sliders[instrument].value() * masterVolumeSlider.value();
+  sounds[instrument].setVolume(volume);
+}
+
+function setMasterVolume() {
+  for (let instrument in sounds) {
+    if (sounds.hasOwnProperty(instrument)) {
+      let volume = sliders[instrument].value() * masterVolumeSlider.value();
+      sounds[instrument].setVolume(volume);
+    }
+  }
+}
+/* Functions from player end */
