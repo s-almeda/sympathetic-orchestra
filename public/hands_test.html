@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gesture and Hand Landmark Recognition</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <!-- some CSS to arrange everything on the page, as I described desiring to chatgpt lol-->
+  <style>
+    body {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: flex-start;
+      margin: 0;
+      padding: 20px;
+    }
+    #webcam, #output_canvas {
+      position: absolute;
+    }
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 20px;
+    }
+    #hand_landmark_output {
+      margin-left: 520px; /* Adjust the value to fit your layout */
+    }
+  </style>
+  <!-- end of CSS -->
+</head>
+
+
+<body>
+  <div id="controls">
+    <p id="gesture_output"></p>
+    <br>
+    <button id="webcamButton">ENABLE PREDICTIONS</button>
+  </div>
+  <div id="videoContainer">
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="output_canvas"></canvas>
+  </div>
+  <div id="hand_landmark_output"></div>
+
+  <script type="module" src="hands_test.js"></script>
+</body>
+</html>

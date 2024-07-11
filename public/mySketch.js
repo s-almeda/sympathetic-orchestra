@@ -7,6 +7,9 @@ let allLoaded = false;
 let masterVolumeSlider;
 let isPaused = false;
 
+let cursorX = 0;
+let cursorY = 0;
+
 /* Preload sound files */
 function preload() {
   for (let i = 0; i < texts.length; i++) {
@@ -265,6 +268,20 @@ function deriveLookupTable() {
   }
 };
 
+/* function that asks the server for new cursor coordinates... */
+function fetchCoordinates() {
+  fetch('/coordinates')
+    .then(response => response.json())
+    .then(data => {
+      cursorX = (1 - data.x) * windowWidth; // make proportional to the size of canvas
+      cursorY = data.y * windowHeight;
+      console.log("fetched coordinates:", data.x, data.y);
+    })
+    .catch(error => {
+      console.error('Error fetching coordinates:', error);
+    });
+}
+
 /* Main Functions. */
 function setup() {
   for (let i = n_parts - 1; i > -1; --i) gestureFlags[i] = 1;
@@ -351,7 +368,11 @@ function draw() {
 
   /* Draw parts */
   drawParts();
-  //drawHands();
+  
+  // check the server for more cursor coordinates
+  fetchCoordinates();
+  fill("red");
+  circle(cursorX, cursorY, 50); // Draw a circle at the fetched coordinates
 }
 
 

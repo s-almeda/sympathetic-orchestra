@@ -15,10 +15,25 @@
   <!--script src="https://unpkg.com/handsfree@8.5.1/build/lib/handsfree.js"></script-->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js"
     crossorigin="anonymous"></script>
+
+  <script type="module" src="gesture_recognition_script.js"></script>
   
 </head>
 
 <body>   
+
+    <div id="controls">
+    <p id="gesture_output"></p>
+    <br>
+    <button id="webcamButton">ENABLE PREDICTIONS</button>
+  </div>
+  <div id="videoContainer">
+    <video id="webcam" style="display:none;" autoplay playsinline></video>
+    <canvas id="output_canvas"></canvas>
+  </div>
+  <div id="hand_landmark_output"></div>
+
+  <script type="module" src="recognize_hands.js"></script>
   
 </body>
 
