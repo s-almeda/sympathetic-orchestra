@@ -269,18 +269,18 @@ function deriveLookupTable() {
 };
 
 /* function that asks the server for new cursor coordinates... */
-function fetchCoordinates() {
-  fetch('/coordinates')
-    .then(response => response.json())
-    .then(data => {
-      cursorX = (1 - data.x) * windowWidth; // make proportional to the size of canvas
-      cursorY = data.y * windowHeight;
-      console.log("fetched coordinates:", data.x, data.y);
-    })
-    .catch(error => {
-      console.error('Error fetching coordinates:', error);
-    });
-}
+// function fetchCoordinates() {
+//   fetch('/coordinates')
+//     .then(response => response.json())
+//     .then(data => {
+//       cursorX = (1 - data.x) * windowWidth; // make proportional to the size of canvas
+//       cursorY = data.y * windowHeight;
+//       console.log("fetched coordinates:", data.x, data.y);
+//     })
+//     .catch(error => {
+//       console.error('Error fetching coordinates:', error);
+//     });
+// }
 
 /* Main Functions. */
 function setup() {
@@ -369,10 +369,19 @@ function draw() {
   /* Draw parts */
   drawParts();
   
-  // check the server for more cursor coordinates
-  fetchCoordinates();
+
   fill("red");
-  circle(cursorX, cursorY, 50); // Draw a circle at the fetched coordinates
+
+  // Use the global object stored with the browser window to get cursor coordinates
+  cursorX = window.sharedData.cursorX || 0;
+  cursorY = window.sharedData.cursorY || 0;
+
+  // these range from (0.0 - 1.0) by default -- let's make it proportional to our window size 
+  cursorX = (1-cursorX)*windowWidth; // horizontal flip this as well
+  cursorY = cursorY *windowHeight 
+
+
+  circle(cursorX, cursorY, 50); // Draw a 50px diameter circle at the coordinates
 }
 
 

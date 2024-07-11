@@ -48,31 +48,6 @@ app.get('/hands', function (req, res) {
     res.sendFile(publicPath + '/hands_test.html');
 });
 
-//when the user goes to the 
-app.post('/landmarks', (req, res) => {
-    console.log('Received landmarks:', req.body);
-
-    //let's grab the 8th landmark out of there
-
-    const landmarks = req.body.landmarks;
-    if (landmarks && landmarks.length > 0 && landmarks[0].length > 8) {
-        const eighthLandmark = landmarks[0][7];  // use index 7 to grab the 8th landmark
-        cursorX = eighthLandmark.x;
-        cursorY = eighthLandmark.y;
-        console.log(`Updated serverside cursor coordinates: X=${cursorX}, Y=${cursorY}`);
-    } else {
-        console.log('Invalid landmark data received.');
-    }
-
-    // tell the recognize_hands code that successfully received its message!
-    res.sendStatus(200);
-});
-
-// Endpoint to *serve* our copies of the cursorX and cursorY coordinates to the p5.js code when requested
-app.get('/coordinates', (req, res) => {
-    res.json({ x: cursorX, y: cursorY });
-});
-
 
 // placeholders
 app.get('/b', function (req, res) {
