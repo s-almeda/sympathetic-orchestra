@@ -1,6 +1,7 @@
 let instruments = ["Flute", "Oboe", "Clarinet", "Bassoon", "French Horns", "Trumpets", "Trombones", "Tuba", "Timpani", "Piano", "Violin 1", "Violin 2", "Viola", "Cello", "Bass"];
 let sounds = {};
 let sliders = {};
+let amplitudeAnalyzers = {};
 let allLoaded = false;
 let masterVolumeSlider;
 let isPaused = false;
@@ -59,6 +60,27 @@ function setup() {
     slider.input(() => setVolume(instrument));
     
     sliders[instrument] = slider;
+    yOffset += 30; // Move to the next position
+
+    // Create an amplitude analyzer for each instrument
+    amplitudeAnalyzers[instrument] = new p5.Amplitude();
+    amplitudeAnalyzers[instrument].setInput(sounds[instrument]);
+  }
+}
+
+function draw() {
+  background(255);
+  
+  let yOffset = 70; // Starting position for individual sliders and amplitude bars
+  for (let i = 0; i < instruments.length; i++) {
+    let instrument = instruments[i];
+    
+    // Display the amplitude bar
+    let level = amplitudeAnalyzers[instrument].getLevel();
+    let barHeight = map(level * 5, 0, 1, 0, 100); // Multiply by a number to make the amplitude more noticeable
+    fill(0, 255, 0);
+    rect(300, yOffset, barHeight, 10);
+    
     yOffset += 30; // Move to the next position
   }
 }
