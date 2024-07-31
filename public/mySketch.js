@@ -280,10 +280,10 @@ function setup() {
   for (let i = texts.length - 1; i > -1; --i) {
     console.log(i);
     ampPtr[i] = new p5.Amplitude();
-    soundfilePtr[i] = loadSound("./blablabla/" + texts[i] + ".mp3", () => {
-      ampPtr[i].setInput(soundfilePtr[i]);
-      ampVals[i] = 1;
-    });
+    //soundfilePtr[i] = loadSound("./blablabla/" + texts[i] + ".mp3", () => {
+    ampPtr[i].setInput(sounds[i]);
+    ampVals[i] = 1;
+    //});
   }
 
   /* Initialize the GUI. */
