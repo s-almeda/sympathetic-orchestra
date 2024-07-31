@@ -156,10 +156,10 @@ function deriveAttributes() {
 
 function _deriveColors() {
   for (let i = units.length - 1; i > -1; --i) {
-
-    colors[i][0] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
-    colors[i][1] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
-    colors[i][2] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
+    let instrument = texts[i]
+    colors[i][0] = int(_normalize(ampvalue[instrument], 0, 1, 255, 0));
+    colors[i][1] = int(_normalize(ampvalue[instrument], 0, 1, 255, 0));
+    colors[i][2] = int(_normalize(ampvalue[instrument], 0, 1, 255, 0));
   }
 };
 
@@ -229,8 +229,9 @@ function setAmp(lowerVoice) {
 
 function _updateAmpVal() {
   for (let i = 0; i < texts.length; i++) {
-    console.log(texts[i] + ": " + ampPtr[i].getLevel());
-    ampvalue[i] = ampPtr[i].getLevel();
+    let instrument = texts[i];
+    console.log(texts[i] + ": " + ampPtr[instrument].getLevel());
+    ampvalue[instrument] = ampPtr[instrument].getLevel();
   }
 }
 
@@ -279,10 +280,11 @@ function setup() {
 //loop through each of the instruments (?)
   for (let i = texts.length - 1; i > -1; --i) {
     console.log(i);
-    ampPtr[i] = new p5.Amplitude();
+    let instrument = texts[i];
+    ampPtr[instrument] = new p5.Amplitude();
     //soundfilePtr[i] = loadSound("./blablabla/" + texts[i] + ".mp3", () => {
-    ampPtr[i].setInput(sounds[i]);
-    ampVals[i] = 1;
+    ampPtr[instrument].setInput(sounds[instrument]);
+    //ampVals[i] = 1;
     //});
   }
 
