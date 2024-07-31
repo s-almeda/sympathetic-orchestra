@@ -117,9 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
         ).toFixed(2);
         const handedness = results.handednesses[0][0].displayName;
 
-        console.log(
+        /*console.log(
           `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`
-        );
+        );*/
       }
     }
 

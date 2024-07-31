@@ -156,6 +156,7 @@ function deriveAttributes() {
 
 function _deriveColors() {
   for (let i = units.length - 1; i > -1; --i) {
+
     colors[i][0] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
     colors[i][1] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
     colors[i][2] = int(_normalize(ampvalue[i], 0, 1, 255, 0));
@@ -228,6 +229,7 @@ function setAmp(lowerVoice) {
 
 function _updateAmpVal() {
   for (let i = 0; i < texts.length; i++) {
+    console.log(texts[i] + ": " + ampPtr[i].getLevel());
     ampvalue[i] = ampPtr[i].getLevel();
   }
 }
@@ -268,30 +270,17 @@ function deriveLookupTable() {
   }
 };
 
-/* function that asks the server for new cursor coordinates... */
-// function fetchCoordinates() {
-//   fetch('/coordinates')
-//     .then(response => response.json())
-//     .then(data => {
-//       cursorX = (1 - data.x) * windowWidth; // make proportional to the size of canvas
-//       cursorY = data.y * windowHeight;
-//       console.log("fetched coordinates:", data.x, data.y);
-//     })
-//     .catch(error => {
-//       console.error('Error fetching coordinates:', error);
-//     });
-// }
-
 /* Main Functions. */
 function setup() {
   for (let i = n_parts - 1; i > -1; --i) gestureFlags[i] = 1;
   /* Initialize the LeapMotion and Sound objects. */
   //leap = new LeapMotion(this);
   console.log("Load soundtracks.");
+//loop through each of the instruments (?)
   for (let i = texts.length - 1; i > -1; --i) {
     console.log(i);
     ampPtr[i] = new p5.Amplitude();
-    soundfilePtr[i] = loadSound("./shortened/" + texts[i] + ".mp3", () => {
+    soundfilePtr[i] = loadSound("./blablabla/" + texts[i] + ".mp3", () => {
       ampPtr[i].setInput(soundfilePtr[i]);
       ampVals[i] = 1;
     });
