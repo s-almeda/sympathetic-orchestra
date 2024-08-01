@@ -360,20 +360,28 @@ function draw() {
   /* Draw parts */
   drawParts();
   
-
-  fill("red");
-
   // Use the global object stored with the browser window to get cursor coordinates
-  cursorX = window.sharedData.cursorX || 0;
-  cursorY = window.sharedData.cursorY || 0;
+  let leftHandCursorX = window.sharedData.leftHandCursorX || 0;
+  let leftHandCursorY = window.sharedData.leftHandCursorY || 0;
+  let rightHandCursorX = window.sharedData.rightHandCursorX || 0;
+  let rightHandCursorY = window.sharedData.rightHandCursorY || 0;
 
   // these range from (0.0 - 1.0) by default -- let's make it proportional to our window size 
-  cursorX = (1-cursorX)*windowWidth; // horizontal flip this as well
-  cursorY = cursorY *windowHeight 
+  leftHandCursorX = (1 - leftHandCursorX) * windowWidth; // horizontal flip this as well
+  leftHandCursorY = leftHandCursorY * windowHeight;
 
+  rightHandCursorX = (1 - rightHandCursorX) * windowWidth; // horizontal flip this as well
+  rightHandCursorY = rightHandCursorY * windowHeight;
 
-  circle(cursorX, cursorY, 50); // Draw a 50px diameter circle at the coordinates
+  // Draw left hand circle
+  fill("red");
+  circle(leftHandCursorX, leftHandCursorY, 50); // Draw a 50px diameter circle at the coordinates
+
+  // Draw right hand circle
+  fill("blue");
+  circle(rightHandCursorX, rightHandCursorY, 50); // Draw a 50px diameter circle at the coordinates
 }
+
 
 
 /* Functions from player start */

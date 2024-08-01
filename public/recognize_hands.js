@@ -5,8 +5,10 @@ import {
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
 
 window.sharedData = {
-  cursorX: 0,
-  cursorY: 0,
+  leftHandCursorX: 0,
+  leftHandCursorY: 0,
+  rightHandCursorX: 0,
+  rightHandCursorY: 0,
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -101,13 +103,16 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (handLandmarkerResults.landmarks && handLandmarkerResults.landmarks.length > 0) {
-        
-        //grab the 8th landmark 
-        const eighthLandmark = handLandmarkerResults.landmarks[0][7];
-
-        //send it to be stored with the browser window's shared data storage, where p5js can grab it.
-        window.sharedData.cursorX = eighthLandmark.x;
-        window.sharedData.cursorY = eighthLandmark.y;
+        handLandmarkerResults.landmarks.forEach((landmarks, index) => {
+          const eighthLandmark = landmarks[8];
+          if (index === 0) {
+            window.sharedData.leftHandCursorX = eighthLandmark.x;
+            window.sharedData.leftHandCursorY = eighthLandmark.y;
+          } else if (index === 1) {
+            window.sharedData.rightHandCursorX = eighthLandmark.x;
+            window.sharedData.rightHandCursorY = eighthLandmark.y;
+          }
+        });
       }
 
       if (results.gestures.length > 0) {
