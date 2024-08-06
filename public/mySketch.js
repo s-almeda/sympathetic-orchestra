@@ -1,3 +1,9 @@
+//Sympathetic Orchestra 
+//by Bob Tianqi Wei, Shm Garanganao Almeda, Ethan Tam, Dor Abrahamson and Bjoern Hartmann
+//UC Berkeley, 2024
+
+// This is the main file for the Sympathetic Orchestra project.
+
 let sound;
 let amp;
 
@@ -274,18 +280,14 @@ function deriveLookupTable() {
 /* Main Functions. */
 function setup() {
   for (let i = n_parts - 1; i > -1; --i) gestureFlags[i] = 1;
-  /* Initialize the LeapMotion and Sound objects. */
-  //leap = new LeapMotion(this);
+  /* Initialize the Sound objects. */
   console.log("Load soundtracks.");
 //loop through each of the instruments (?)
   for (let i = texts.length - 1; i > -1; --i) {
     console.log(i);
     let instrument = texts[i];
     ampPtr[instrument] = new p5.Amplitude();
-    //soundfilePtr[i] = loadSound("./blablabla/" + texts[i] + ".mp3", () => {
     ampPtr[instrument].setInput(sounds[instrument]);
-    //ampVals[i] = 1;
-    //});
   }
 
   /* Initialize the GUI. */

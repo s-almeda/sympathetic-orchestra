@@ -1,3 +1,9 @@
+//Sympathetic Orchestra 
+//by Bob Tianqi Wei, Shm Garanganao Almeda, Ethan Tam, Dor Abrahamson and Bjoern Hartmann
+//UC Berkeley, 2024
+
+//This is the code for the hand gesture recognition model.
+
 import {
   GestureRecognizer,
   HandLandmarker,
