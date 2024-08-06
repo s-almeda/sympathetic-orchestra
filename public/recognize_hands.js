@@ -9,6 +9,11 @@ window.sharedData = {
   leftHandCursorY: 0,
   rightHandCursorX: 0,
   rightHandCursorY: 0,
+  gestureData: {
+    gestureName: "",
+    gestureScore: 0,
+    handedness: ""
+  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -121,6 +126,10 @@ document.addEventListener("DOMContentLoaded", () => {
           results.gestures[0][0].score * 100
         ).toFixed(2);
         const handedness = results.handednesses[0][0].displayName;
+
+        window.sharedData.gestureData.gestureName = categoryName;
+        window.sharedData.gestureData.gestureScore = categoryScore;
+        window.sharedData.gestureData.handedness = handedness;
 
         /*console.log(
           `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`
