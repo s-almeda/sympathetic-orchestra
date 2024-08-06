@@ -375,14 +375,51 @@ function draw() {
   rightHandCursorX = (1 - rightHandCursorX) * windowWidth; // horizontal flip this as well
   rightHandCursorY = rightHandCursorY * windowHeight;
 
-  // Draw left hand circle
-  fill("red");
-  circle(leftHandCursorX, leftHandCursorY, 50); // Draw a 50px diameter circle at the coordinates
+  // Read gesture data from window.sharedData
+  let leftGestureName = window.sharedData.leftGestureData.gestureName;
+  let rightGestureName = window.sharedData.rightGestureData.gestureName;
 
-  // Draw right hand circle
-  fill("blue");
-  circle(rightHandCursorX, rightHandCursorY, 50); // Draw a 50px diameter circle at the coordinates
+  // Draw left hand cursor based on gesture
+  switch (leftGestureName) {
+    case "Pointing_Up":
+      fill("green");
+      triangle(leftHandCursorX, leftHandCursorY - 25, leftHandCursorX - 25, leftHandCursorY + 25, leftHandCursorX + 25, leftHandCursorY + 25);
+      break;
+    case "Open_Palm":
+      fill("yellow");
+      rect(leftHandCursorX - 25, leftHandCursorY - 12.5, 50, 25);
+      break;
+    case "Closed_Fist":
+      fill("red");
+      circle(leftHandCursorX, leftHandCursorY, 25); // Smaller circle
+      break;
+    default:
+      fill("red");
+      circle(leftHandCursorX, leftHandCursorY, 50); // Default circle
+      break;
+  }
+
+  // Draw right hand cursor based on gesture
+  switch (rightGestureName) {
+    case "Pointing_Up":
+      fill("green");
+      triangle(rightHandCursorX, rightHandCursorY - 25, rightHandCursorX - 25, rightHandCursorY + 25, rightHandCursorX + 25, rightHandCursorY + 25);
+      break;
+    case "Open_Palm":
+      fill("yellow");
+      rect(rightHandCursorX - 25, rightHandCursorY - 12.5, 50, 25);
+      break;
+    case "Closed_Fist":
+      fill("blue");
+      circle(rightHandCursorX, rightHandCursorY, 25); // Smaller circle
+      break;
+    default:
+      fill("blue");
+      circle(rightHandCursorX, rightHandCursorY, 50); // Default circle
+      break;
+  }
 }
+
 
 
 

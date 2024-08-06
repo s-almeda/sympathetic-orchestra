@@ -2,7 +2,7 @@
 //by Bob Tianqi Wei, Shm Garanganao Almeda, Ethan Tam, Dor Abrahamson and Bjoern Hartmann
 //UC Berkeley, 2024
 
-//This is the code for the hand gesture recognition model.
+// This is the code for the hand gesture recognition model.
 
 import {
   GestureRecognizer,
@@ -15,7 +15,12 @@ window.sharedData = {
   leftHandCursorY: 0,
   rightHandCursorX: 0,
   rightHandCursorY: 0,
-  gestureData: {
+  leftGestureData: {
+    gestureName: "",
+    gestureScore: 0,
+    handedness: ""
+  },
+  rightGestureData: {
     gestureName: "",
     gestureScore: 0,
     handedness: ""
@@ -127,19 +132,23 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (results.gestures.length > 0) {
-        const categoryName = results.gestures[0][0].categoryName;
-        const categoryScore = parseFloat(
-          results.gestures[0][0].score * 100
-        ).toFixed(2);
-        const handedness = results.handednesses[0][0].displayName;
+        results.gestures.forEach((gesture, index) => {
+          const categoryName = gesture[0].categoryName;
+          const categoryScore = parseFloat(
+            gesture[0].score * 100
+          ).toFixed(2);
+          const handedness = results.handednesses[index][0].displayName;
 
-        window.sharedData.gestureData.gestureName = categoryName;
-        window.sharedData.gestureData.gestureScore = categoryScore;
-        window.sharedData.gestureData.handedness = handedness;
-
-        /*console.log(
-          `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`
-        );*/
+          if (index === 0) {
+            window.sharedData.leftGestureData.gestureName = categoryName;
+            window.sharedData.leftGestureData.gestureScore = categoryScore;
+            window.sharedData.leftGestureData.handedness = handedness;
+          } else if (index === 1) {
+            window.sharedData.rightGestureData.gestureName = categoryName;
+            window.sharedData.rightGestureData.gestureScore = categoryScore;
+            window.sharedData.rightGestureData.handedness = handedness;
+          }
+        });
       }
     }
 
@@ -148,3 +157,44 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 });
+
+// p5.js part
+function draw() {
+  /* Initialize flags. */
+  let playFlag = true;
+  let lowerVoice = false;
+  let target = -1;
+  let tmp = 255;
+  states[0] = -1; states[1] = -1;
+    
+  let leftHand = -1;
+  let rightHand = -1;
+  
+  /* Renew playtime and gestures. */
+  updateTime();
+  renewGestureFlags();
+  background(200);
+
+  /* Update amplitude values */
+  _updateAmpVal();
+
+  /* Draw parts */
+  drawParts();
+  
+  // Use the global object stored with the browser window to get cursor coordinates
+  let leftHandCursorX = window.sharedData.leftHandCursorX || 0;
+  let leftHandCursorY = window.sharedData.leftHandCursorY || 0;
+  let rightHandCursorX = window.sharedData.rightHandCursorX || 0;
+  let rightHandCursorY = window.sharedData.rightHandCursorY || 0;
+
+  // these range from (0.0 - 1.0) by default -- let's make it proportional to our window size 
+  leftHandCursorX = (1 - leftHandCursorX) * windowWidth; // horizontal flip this as well
+  leftHandCursorY = leftHandCursorY * windowHeight;
+
+  rightHandCursorX = (1 - rightHandCursorX) * windowWidth; // horizontal flip this as well
+  rightHandCursorY = rightHandCursorY * windowHeight;
+
+  // Read gesture data from window.sharedData
+  let leftGestureName = window.sharedData.leftGestureData.gestureName;
+  let rightGestureName = window.sharedData.rightGestureData.gestureName;
+}
