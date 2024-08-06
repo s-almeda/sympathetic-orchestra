@@ -160,26 +160,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // p5.js part
 function draw() {
-  /* Initialize flags. */
-  let playFlag = true;
-  let lowerVoice = false;
-  let target = -1;
-  let tmp = 255;
+
   states[0] = -1; states[1] = -1;
     
   let leftHand = -1;
   let rightHand = -1;
-  
-  /* Renew playtime and gestures. */
-  updateTime();
-  renewGestureFlags();
-  background(200);
-
-  /* Update amplitude values */
-  _updateAmpVal();
-
-  /* Draw parts */
-  drawParts();
   
   // Use the global object stored with the browser window to get cursor coordinates
   let leftHandCursorX = window.sharedData.leftHandCursorX || 0;

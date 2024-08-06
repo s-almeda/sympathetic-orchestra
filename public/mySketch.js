@@ -1,6 +1,6 @@
-//Sympathetic Orchestra 
-//by Bob Tianqi Wei, Shm Garanganao Almeda, Ethan Tam, Dor Abrahamson and Bjoern Hartmann
-//UC Berkeley, 2024
+// Sympathetic Orchestra 
+// by Bob Tianqi Wei, Shm Garanganao Almeda, Ethan Tam, Dor Abrahamson and Bjoern Hartmann
+// UC Berkeley, 2024
 
 // This is the main file for the Sympathetic Orchestra project.
 
@@ -379,6 +379,18 @@ function draw() {
   let leftGestureName = window.sharedData.leftGestureData.gestureName;
   let rightGestureName = window.sharedData.rightGestureData.gestureName;
 
+  // Adjust volume based on the hand's y position when the gesture is "Open_Palm"
+  if (leftGestureName === "Open_Palm") {
+    let volume = 1 - (leftHandCursorY / windowHeight); // Normalize y position to volume (0.0 - 1.0)
+    masterVolumeSlider.value(volume);
+    setMasterVolume();
+  }
+  if (rightGestureName === "Open_Palm") {
+    let volume = 1 - (rightHandCursorY / windowHeight); // Normalize y position to volume (0.0 - 1.0)
+    masterVolumeSlider.value(volume);
+    setMasterVolume();
+  }
+
   // Draw left hand cursor based on gesture
   switch (leftGestureName) {
     case "Pointing_Up":
@@ -419,9 +431,6 @@ function draw() {
       break;
   }
 }
-
-
-
 
 /* Functions from player start */
 function playAllSounds() {
