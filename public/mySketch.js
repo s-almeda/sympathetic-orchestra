@@ -162,12 +162,15 @@ function deriveAttributes() {
 
 function _deriveColors() {
   for (let i = units.length - 1; i > -1; --i) {
-    let instrument = texts[i]
-    colors[i][0] = int(_normalize(ampvalue[instrument], 0, 1, 255, 0));
-    colors[i][1] = int(_normalize(ampvalue[instrument], 0, 1, 255, 0));
-    colors[i][2] = int(_normalize(ampvalue[instrument], 0, 1, 255, 0));
+    let instrument = texts[i];
+    // 对振幅值进行平方以增强对比度
+    let enhancedValue = ampvalue[instrument] * 3;
+    colors[i][0] = int(_normalize(enhancedValue, 0, 1, 255, 0));
+    colors[i][1] = int(_normalize(enhancedValue, 0, 1, 255, 0));
+    colors[i][2] = int(_normalize(enhancedValue, 0, 1, 255, 0));
   }
-};
+}
+
 
 function drawParts() {
   noStroke();
@@ -480,16 +483,25 @@ function resumeAllSounds() {
 }
 
 function setVolume(instrument) {
-  let volume = sliders[instrument].value() * masterVolumeSlider.value();
-  sounds[instrument].setVolume(volume);
+  if (instrument === "Piano") {
+    sounds[instrument].setVolume(1); // Piano volume is always 100%
+  } else {
+    let volume = sliders[instrument].value() * masterVolumeSlider.value();
+    sounds[instrument].setVolume(volume);
+  }
 }
 
 function setMasterVolume() {
   for (let instrument in sounds) {
     if (sounds.hasOwnProperty(instrument)) {
-      let volume = sliders[instrument].value() * masterVolumeSlider.value();
-      sounds[instrument].setVolume(volume);
+      if (instrument === "Piano") {
+        sounds[instrument].setVolume(1); // Piano volume is always 100%
+      } else {
+        let volume = sliders[instrument].value() * masterVolumeSlider.value();
+        sounds[instrument].setVolume(volume);
+      }
     }
   }
 }
+
 /* Functions from player end */
