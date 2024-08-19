@@ -21,7 +21,17 @@ function preload() {
   for (let i = 0; i < texts.length; i++) {
     let instrument = texts[i];
     sounds[instrument] = loadSound('soundfiles/' + instrument + '.mp3', soundLoaded);
+    
+    // Add an event listener for when the sound ends
+    sounds[instrument].onended(() => soundEnded(i));
   }
+}
+
+// soundEnded callback function
+function soundEnded(index) {
+  colors[index][0] = 255; // Reset the color to white
+  colors[index][1] = 255;
+  colors[index][2] = 255;
 }
 
 function soundLoaded() {
@@ -163,8 +173,8 @@ function deriveAttributes() {
 function _deriveColors() {
   for (let i = units.length - 1; i > -1; --i) {
     let instrument = texts[i];
-    // 对振幅值进行平方以增强对比度
-    let enhancedValue = ampvalue[instrument] * 3;
+    // *4 to make the color more vibrant
+    let enhancedValue = ampvalue[instrument] * 4;
     colors[i][0] = int(_normalize(enhancedValue, 0, 1, 255, 0));
     colors[i][1] = int(_normalize(enhancedValue, 0, 1, 255, 0));
     colors[i][2] = int(_normalize(enhancedValue, 0, 1, 255, 0));
@@ -402,15 +412,15 @@ function draw() {
       break;
     case "Open_Palm":
       fill("yellow");
-      rect(leftHandCursorX - 25, leftHandCursorY - 12.5, 50, 25);
+      rect(leftHandCursorX - 25, leftHandCursorY - 12.5, 45, 15);
       break;
     case "Closed_Fist":
       fill("red");
-      circle(leftHandCursorX, leftHandCursorY, 25); // Smaller circle
+      circle(leftHandCursorX, leftHandCursorY, 10); // Smaller circle
       break;
     default:
       fill("red");
-      circle(leftHandCursorX, leftHandCursorY, 50); // Default circle
+      circle(leftHandCursorX, leftHandCursorY, 25); // Default circle
       break;
   }
 
@@ -422,15 +432,15 @@ function draw() {
       break;
     case "Open_Palm":
       fill("yellow");
-      rect(rightHandCursorX - 25, rightHandCursorY - 12.5, 50, 25);
+      rect(rightHandCursorX - 25, rightHandCursorY - 12.5, 45, 15);
       break;
     case "Closed_Fist":
       fill("blue");
-      circle(rightHandCursorX, rightHandCursorY, 25); // Smaller circle
+      circle(rightHandCursorX, rightHandCursorY, 10); // Smaller circle
       break;
     default:
       fill("blue");
-      circle(rightHandCursorX, rightHandCursorY, 50); // Default circle
+      circle(rightHandCursorX, rightHandCursorY, 25); // Default circle
       break;
   }
 }
