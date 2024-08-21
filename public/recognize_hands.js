@@ -49,7 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
         delegate: "GPU",
       },
-      runningMode: "VIDEO",
+      numHands: 2,
+      runningMode: "VIDEO"
     });
   };
   createGestureRecognizer();
@@ -120,16 +121,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (handLandmarkerResults.landmarks && handLandmarkerResults.landmarks.length > 0) {
         handLandmarkerResults.landmarks.forEach((landmarks, index) => {
+
           const eighthLandmark = landmarks[8];
-          if (index === 0) {
+          if (handLandmarkerResults.handednesses[index][0].categoryName === "Right") {
             window.sharedData.leftHandCursorX = eighthLandmark.x;
             window.sharedData.leftHandCursorY = eighthLandmark.y;
-          } else if (index === 1) {
+          } else {
             window.sharedData.rightHandCursorX = eighthLandmark.x;
             window.sharedData.rightHandCursorY = eighthLandmark.y;
           }
         });
       }
+      console.log(results);
 
       if (results.gestures.length > 0) {
         results.gestures.forEach((gesture, index) => {
@@ -138,12 +141,13 @@ document.addEventListener("DOMContentLoaded", () => {
             gesture[0].score * 100
           ).toFixed(2);
           const handedness = results.handednesses[index][0].displayName;
+          //console.log(handedness);
 
-          if (index === 0) {
+          if (handedness == "Right") {
             window.sharedData.leftGestureData.gestureName = categoryName;
             window.sharedData.leftGestureData.gestureScore = categoryScore;
             window.sharedData.leftGestureData.handedness = handedness;
-          } else if (index === 1) {
+          } else if (handedness=="Left") {
             window.sharedData.rightGestureData.gestureName = categoryName;
             window.sharedData.rightGestureData.gestureScore = categoryScore;
             window.sharedData.rightGestureData.handedness = handedness;
@@ -158,28 +162,3 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 });
 
-// p5.js part
-function draw() {
-
-  states[0] = -1; states[1] = -1;
-    
-  let leftHand = -1;
-  let rightHand = -1;
-  
-  // Use the global object stored with the browser window to get cursor coordinates
-  let leftHandCursorX = window.sharedData.leftHandCursorX || 0;
-  let leftHandCursorY = window.sharedData.leftHandCursorY || 0;
-  let rightHandCursorX = window.sharedData.rightHandCursorX || 0;
-  let rightHandCursorY = window.sharedData.rightHandCursorY || 0;
-
-  // these range from (0.0 - 1.0) by default -- let's make it proportional to our window size 
-  leftHandCursorX = (1 - leftHandCursorX) * windowWidth; // horizontal flip this as well
-  leftHandCursorY = leftHandCursorY * windowHeight;
-
-  rightHandCursorX = (1 - rightHandCursorX) * windowWidth; // horizontal flip this as well
-  rightHandCursorY = rightHandCursorY * windowHeight;
-
-  // Read gesture data from window.sharedData
-  let leftGestureName = window.sharedData.leftGestureData.gestureName;
-  let rightGestureName = window.sharedData.rightGestureData.gestureName;
-}

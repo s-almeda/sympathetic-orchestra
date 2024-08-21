@@ -252,7 +252,7 @@ function setAmp(lowerVoice) {
 function _updateAmpVal() {
   for (let i = 0; i < texts.length; i++) {
     let instrument = texts[i];
-    console.log(texts[i] + ": " + ampPtr[instrument].getLevel());
+    //console.log(texts[i] + ": " + ampPtr[instrument].getLevel());
     ampvalue[instrument] = ampPtr[instrument].getLevel();
   }
 }
@@ -392,7 +392,32 @@ function setup() {
   lastTime = millis();
 };
 
+function drawDebugInfo() {
+  baseX = windowWidth/2;
+  fill("black");
+  rect(baseX - 20, 10, 600, 400);
+  fill("white");
+  text("Left Hand Cursor X: " + window.sharedData.leftHandCursorX, baseX, 50);
+  text("Left Hand Cursor Y: " + window.sharedData.leftHandCursorY, baseX, 80);
+
+  // Display the right hand cursor data
+  text("Right Hand Cursor X: " + window.sharedData.rightHandCursorX, baseX, 130);
+  text("Right Hand Cursor Y: " + window.sharedData.rightHandCursorY, baseX, 160);
+
+  // Display the left hand gesture data
+  text("Left Hand Gesture Name: " + window.sharedData.leftGestureData.gestureName, baseX, 210);
+  text("Left Hand Gesture Score: " + window.sharedData.leftGestureData.gestureScore, baseX, 240);
+  text("Left Hand Gesture Handedness: " + window.sharedData.leftGestureData.handedness, baseX, 270);
+
+  // Display the right hand gesture data
+  text("Right Hand Gesture Name: " + window.sharedData.rightGestureData.gestureName, baseX, 320);
+  text("Right Hand Gesture Score: " + window.sharedData.rightGestureData.gestureScore, baseX, 350);
+  text("Right Hand Gesture Handedness: " + window.sharedData.rightGestureData.handedness, baseX, 380);
+
+}
+
 function draw() {
+
   /* Initialize flags. */
   let playFlag = true;
   let lowerVoice = false;
@@ -413,6 +438,7 @@ function draw() {
 
   /* Draw parts */
   drawParts();
+
   
   // Use the global object stored with the browser window to get cursor coordinates
   let leftHandCursorX = window.sharedData.leftHandCursorX || 0;
