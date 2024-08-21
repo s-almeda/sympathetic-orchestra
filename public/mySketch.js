@@ -16,6 +16,9 @@ let isPaused = false;
 let cursorX = 0;
 let cursorY = 0;
 
+let hideSlidersButton;
+let showSlidersButton;
+
 /* Preload sound files */
 function preload() {
   for (let i = 0; i < texts.length; i++) {
@@ -254,6 +257,27 @@ function _updateAmpVal() {
   }
 }
 
+function hideMasterVolumeSlider() {
+  masterVolumeSlider.style('display', 'none');
+}
+
+function showMasterVolumeSlider() {
+  masterVolumeSlider.style('display', 'block');
+}
+
+function hideInstrumentSliders() {
+  for (let instrument in sliders) {
+      sliders[instrument].style('display', 'none');
+  }
+}
+
+function showInstrumentSliders() {
+  for (let instrument in sliders) {
+      sliders[instrument].style('display', 'block');
+  }
+}
+
+
 /* Functions recording time. */
 function updateTime() {
   let curTime = millis();
@@ -343,6 +367,21 @@ function setup() {
     yOffset += 30; // Move to the next position
   }
 
+  // Button to hide sliders
+  hideSlidersButton = createButton('Hide Sliders');
+  hideSlidersButton.position(10, 70);
+  hideSlidersButton.mousePressed(() => {
+      hideMasterVolumeSlider();
+      hideInstrumentSliders();
+  });
+  
+  // Button to show sliders
+  showSlidersButton = createButton('Show Sliders');
+  showSlidersButton.position(110, 70);
+  showSlidersButton.mousePressed(() => {
+      showMasterVolumeSlider();
+      showInstrumentSliders();
+  });
   /* Other Settings. */
   //frameRate(60);
 
