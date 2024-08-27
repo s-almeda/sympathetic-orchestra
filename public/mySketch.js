@@ -458,30 +458,30 @@ function draw() {
   let rightGestureName = window.sharedData.rightGestureData.gestureName;
 
   
-  // 检查右手是否指向特定声部
+  // check if the right hand is pointing up
   if (rightGestureName === "Pointing_Up") {
     target = detectInstrument(rightHandCursorX, rightHandCursorY);
     
-    // 如果右手指向特定声部，且左手是展开的状态，调整该声部的音量
+    // if the right hand is pointing up and is over a unit, set the color to green
     if (target !== -1 && leftGestureName === "Open_Palm") {
-      let volume = 1 - (leftHandCursorY / windowHeight); // 根据左手Y坐标调整音量
+      let volume = 1 - (leftHandCursorY / windowHeight); // use the left hand's y position to set the volume
       sliders[texts[target]].value(volume);
       setVolume(texts[target]);
       
-      // 改变指向声部的颜色为绿色
+      // change the color of the unit to green
       colors[target] = [0, 255, 0];
     }
   } else {
-    // 如果右手没有指向任何声部，恢复所有声部颜色
+    // if the right hand is not pointing up, reset the colors
     resetColors();
   }
 
-  // 检查任意一只手是否握拳
+  // check if the left hand is fist
   if (leftGestureName === "Closed_Fist" || rightGestureName === "Closed_Fist") {
-    // 设置为静音
+    // mute
     setAmp(true);
   } else {
-    // 根据手势和位置调整音量
+    // adjust volume
     setAmp(false);
   }
 
@@ -501,9 +501,9 @@ function draw() {
   switch (leftGestureName) {
     case "Pointing_Up":
       fill("green");
-      triangle(leftHandCursorX, leftHandCursorY, // 新的第一个顶点
-         leftHandCursorX + 25, leftHandCursorY + 26, // 新的第二个顶点
-         leftHandCursorX + 1, leftHandCursorY + 35); // 新的第三个顶点
+      triangle(leftHandCursorX, leftHandCursorY, // first vertex
+         leftHandCursorX + 25, leftHandCursorY + 26, // second vertex
+         leftHandCursorX + 1, leftHandCursorY + 35); // third vertex
 
       break;
     case "Open_Palm":
@@ -544,18 +544,18 @@ function draw() {
 
 }
 
-// 检测手指指向的声部
+// check if the cursor is over a unit
 function detectInstrument(x, y) {
   for (let i = 0; i < units.length; i++) {
     if (x > unitAttributes[i][0] && x < unitAttributes[i][0] + unitAttributes[i][2] &&
         y > unitAttributes[i][1] && y < unitAttributes[i][1] + unitAttributes[i][3]) {
-      return i; // 返回指向的声部索引
+      return i; // return the index of the unit
     }
   }
-  return -1; // 如果没有指向任何声部
+  return -1; // if the cursor is not over a unit
 }
 
-// 重置所有声部颜色为初始值
+// reset the colors of the units
 function resetColors() {
   for (let i = 0; i < colors.length; i++) {
     colors[i] = [(units[i][4] < 128) ? 255 : 0, (units[i][4] < 128) ? 255 : 0, (units[i][4] < 128) ? 255 : 0];
@@ -566,8 +566,8 @@ function resetColors() {
 function setAmp(lowerVoice) {
   if (lowerVoice) {
     for (let i = units.length - 1; i > -1; --i) {
-      if (i === 10) sounds[texts[i]].setVolume(1); // 钢琴音量始终为100%
-      else sounds[texts[i]].setVolume(lowVoiceVal); // 静音或非常低的音量
+      if (i === 10) sounds[texts[i]].setVolume(1); // piano volume is always 100%
+      else sounds[texts[i]].setVolume(lowVoiceVal); // mute the other instruments
     }
   } else {
     for (let i = units.length - 1; i > -1; --i) {
