@@ -457,6 +457,34 @@ function draw() {
   let leftGestureName = window.sharedData.leftGestureData.gestureName;
   let rightGestureName = window.sharedData.rightGestureData.gestureName;
 
+  
+  // 检查右手是否指向特定声部
+  if (rightGestureName === "Pointing_Up") {
+    target = detectInstrument(rightHandCursorX, rightHandCursorY);
+    
+    // 如果右手指向特定声部，且左手是展开的状态，调整该声部的音量
+    if (target !== -1 && leftGestureName === "Open_Palm") {
+      let volume = 1 - (leftHandCursorY / windowHeight); // 根据左手Y坐标调整音量
+      sliders[texts[target]].value(volume);
+      setVolume(texts[target]);
+      
+      // 改变指向声部的颜色为绿色
+      colors[target] = [0, 255, 0];
+    }
+  } else {
+    // 如果右手没有指向任何声部，恢复所有声部颜色
+    resetColors();
+  }
+
+  // 检查任意一只手是否握拳
+  if (leftGestureName === "Closed_Fist" || rightGestureName === "Closed_Fist") {
+    // 设置为静音
+    setAmp(true);
+  } else {
+    // 根据手势和位置调整音量
+    setAmp(false);
+  }
+
   // Adjust volume based on the hand's y position when the gesture is "Open_Palm"
   if (leftGestureName === "Open_Palm") {
     let volume = 1 - (leftHandCursorY / windowHeight); // Normalize y position to volume (0.0 - 1.0)
@@ -473,7 +501,10 @@ function draw() {
   switch (leftGestureName) {
     case "Pointing_Up":
       fill("green");
-      triangle(leftHandCursorX, leftHandCursorY - 25, leftHandCursorX - 25, leftHandCursorY + 25, leftHandCursorX + 25, leftHandCursorY + 25);
+      triangle(leftHandCursorX, leftHandCursorY, // 新的第一个顶点
+         leftHandCursorX + 25, leftHandCursorY + 26, // 新的第二个顶点
+         leftHandCursorX + 1, leftHandCursorY + 35); // 新的第三个顶点
+
       break;
     case "Open_Palm":
       fill("yellow");
@@ -493,7 +524,9 @@ function draw() {
   switch (rightGestureName) {
     case "Pointing_Up":
       fill("green");
-      triangle(rightHandCursorX, rightHandCursorY - 25, rightHandCursorX - 25, rightHandCursorY + 25, rightHandCursorX + 25, rightHandCursorY + 25);
+      triangle(rightHandCursorX, rightHandCursorY, 
+        rightHandCursorX + 25, rightHandCursorY + 26, 
+        rightHandCursorX + 1, rightHandCursorY + 35);
       break;
     case "Open_Palm":
       fill("yellow");
@@ -508,7 +541,45 @@ function draw() {
       circle(rightHandCursorX, rightHandCursorY, 25); // Default circle
       break;
   }
+
 }
+
+// 检测手指指向的声部
+function detectInstrument(x, y) {
+  for (let i = 0; i < units.length; i++) {
+    if (x > unitAttributes[i][0] && x < unitAttributes[i][0] + unitAttributes[i][2] &&
+        y > unitAttributes[i][1] && y < unitAttributes[i][1] + unitAttributes[i][3]) {
+      return i; // 返回指向的声部索引
+    }
+  }
+  return -1; // 如果没有指向任何声部
+}
+
+// 重置所有声部颜色为初始值
+function resetColors() {
+  for (let i = 0; i < colors.length; i++) {
+    colors[i] = [(units[i][4] < 128) ? 255 : 0, (units[i][4] < 128) ? 255 : 0, (units[i][4] < 128) ? 255 : 0];
+  }
+}
+
+
+function setAmp(lowerVoice) {
+  if (lowerVoice) {
+    for (let i = units.length - 1; i > -1; --i) {
+      if (i === 10) sounds[texts[i]].setVolume(1); // 钢琴音量始终为100%
+      else sounds[texts[i]].setVolume(lowVoiceVal); // 静音或非常低的音量
+    }
+  } else {
+    for (let i = units.length - 1; i > -1; --i) {
+      if (i === 10) sounds[texts[i]].setVolume(1);
+      else {
+        let volume = sliders[texts[i]].value() * masterVolumeSlider.value();
+        sounds[texts[i]].setVolume(volume);
+      }
+    }
+  }
+}
+
 
 /* Functions from player start */
 function playAllSounds() {
