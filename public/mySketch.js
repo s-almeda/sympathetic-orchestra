@@ -23,7 +23,7 @@ let showSlidersButton;
 function preload() {
   for (let i = 0; i < texts.length; i++) {
     let instrument = texts[i];
-    sounds[instrument] = loadSound('soundfiles/' + instrument + '.mp3', soundLoaded);
+    sounds[instrument] = loadSound('shorter_soundfiles/' + instrument + '.mp3', soundLoaded);
     
     // Add an event listener for when the sound ends
     sounds[instrument].onended(() => soundEnded(i));
@@ -350,22 +350,25 @@ function setup() {
   masterVolumeSlider.input(setMasterVolume);
 
   let masterLabel = createDiv('Master Volume');
-  masterLabel.position(10, 35);
+  //masterLabel.position(10, 35);
 
   let yOffset = 70; // Starting position for individual sliders
   for (let i = 0; i < texts.length; i++) {
-    let instrument = texts[i];
-    
-    let label = createDiv(instrument);
-    label.position(10, yOffset);
-    
-    let slider = createSlider(0, 1, 0.5, 0.01);
-    slider.position(150, yOffset);
-    slider.input(() => setVolume(instrument));
-    
-    sliders[instrument] = slider;
-    yOffset += 30; // Move to the next position
+      let instrument = texts[i];
+      
+      let label = createDiv(instrument);
+      
+      // Set default slider value to 0.7 (70%) for piano, otherwise 0.5 (50%)
+      let defaultVolume = (instrument === "Piano") ? 0.7 : 0.5;
+      
+      let slider = createSlider(0, 1, defaultVolume, 0.01);
+      slider.position(150, yOffset);
+      slider.input(() => setVolume(instrument));
+      
+      sliders[instrument] = slider;
+      yOffset += 30; // Move to the next position
   }
+  
 
   // Button to hide sliders
   hideSlidersButton = createButton('Hide Sliders');
@@ -382,6 +385,10 @@ function setup() {
       showMasterVolumeSlider();
       showInstrumentSliders();
   });
+
+  // Hide all sliders by default
+  hideMasterVolumeSlider();
+  hideInstrumentSliders();
   /* Other Settings. */
   //frameRate(60);
 
@@ -462,19 +469,20 @@ function draw() {
   if (rightGestureName === "Pointing_Up") {
     target = detectInstrument(rightHandCursorX, rightHandCursorY);
     
-    // if the right hand is pointing up and is over a unit, set the color to green
+    // 如果右手是指向上且位于一个声部上方，并且左手是张开手掌
     if (target !== -1 && leftGestureName === "Open_Palm") {
-      let volume = 1 - (leftHandCursorY / windowHeight); // use the left hand's y position to set the volume
-      sliders[texts[target]].value(volume);
-      setVolume(texts[target]);
-      
-      // change the color of the unit to green
-      colors[target] = [0, 255, 0];
+        let volume = 1 - (leftHandCursorY / windowHeight); // 使用左手的y位置设置音量
+        sliders[texts[target]].value(volume);
+        setVolume(texts[target]);
+        
+        // 将声部的颜色设置为绿色
+        colors[target] = [0, 255, 0];
     }
-  } else {
-    // if the right hand is not pointing up, reset the colors
+} else {
+    // 如果右手不是指向上，重置颜色
     resetColors();
-  }
+}
+
 
   // check if the left hand is fist
   if (leftGestureName === "Closed_Fist" || rightGestureName === "Closed_Fist") {
@@ -555,7 +563,6 @@ function detectInstrument(x, y) {
   return -1; // if the cursor is not over a unit
 }
 
-// reset the colors of the units
 function resetColors() {
   for (let i = 0; i < colors.length; i++) {
     colors[i] = [(units[i][4] < 128) ? 255 : 0, (units[i][4] < 128) ? 255 : 0, (units[i][4] < 128) ? 255 : 0];
@@ -563,10 +570,11 @@ function resetColors() {
 }
 
 
+
 function setAmp(lowerVoice) {
   if (lowerVoice) {
     for (let i = units.length - 1; i > -1; --i) {
-      if (i === 10) sounds[texts[i]].setVolume(1); // piano volume is always 100%
+      if (i === 10) sounds[texts[i]].setVolume(0.7); // piano volume is always 100%
       else sounds[texts[i]].setVolume(lowVoiceVal); // mute the other instruments
     }
   } else {
@@ -630,7 +638,7 @@ function resumeAllSounds() {
 
 function setVolume(instrument) {
   if (instrument === "Piano") {
-    sounds[instrument].setVolume(1); // Piano volume is always 100%
+    sounds[instrument].setVolume(0.7); // Piano volume is always 100%
   } else {
     let volume = sliders[instrument].value() * masterVolumeSlider.value();
     sounds[instrument].setVolume(volume);
@@ -641,7 +649,7 @@ function setMasterVolume() {
   for (let instrument in sounds) {
     if (sounds.hasOwnProperty(instrument)) {
       if (instrument === "Piano") {
-        sounds[instrument].setVolume(1); // Piano volume is always 100%
+        sounds[instrument].setVolume(0.7); // Piano volume is always 100%
       } else {
         let volume = sliders[instrument].value() * masterVolumeSlider.value();
         sounds[instrument].setVolume(volume);
