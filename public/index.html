@@ -13,29 +13,40 @@
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/addons/p5.sound.min.js"></script>
   
   <link rel="stylesheet" type="text/css" href="style.css">
+  <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
   
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js"
     crossorigin="anonymous"></script>
   
 </head>
 
-<body>   
-
-    <div id="controls">
-    <p id="gesture_output"></p>
-    <br>
-    <button id="webcamButton">ENABLE PREDICTIONS</button>
-  </div>
-  <div id="videoContainer">
-    <video id="webcam" style="display:none;" autoplay playsinline></video>
-    <canvas id="output_canvas"></canvas>
-  </div>
-  <div id="hand_landmark_output"></div>
-
+<body style="background-color: #C8C8C8;">
   <!-- interface: -->
+  <canvas id="output_canvas" style="display:none;"></canvas>
   <script src="mySketch.js"></script>
+
+    <div id="controls" style="display:none;">
+    <p id="gesture_output" style="display:none;"></p>
+    <br>
+    <button id="webcamButton" style="display:none;">ENABLE PREDICTIONS</button>
+  </div>
+  <div id="videoContainer style="display:none;">
+    <video id="webcam" style="display:none;" autoplay playsinline></video>
+    
+  </div>
+  <!--div id="hand_landmark_output"></div-->
+
+  
   <!-- computer vision code: -->
   <script type="module" src="recognize_hands.js"></script>
+  <script>
+    // Wait 5 seconds after page load, then automatically enable predictions
+    window.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        document.getElementById("webcamButton").click();
+      }, 1000); // 5000 milliseconds = 5 seconds
+    });
+  </script>
   
 </body>
 

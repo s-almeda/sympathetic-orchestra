@@ -8,10 +8,12 @@ let sound;
 let amp;
 
 let sounds = {};
-let sliders = {};
+let sliders = {}; // the sliders
+let labels = {}; // labels for the sliders
 let allLoaded = false;
 let masterVolumeSlider;
-let isPaused = false;
+let isPaused = true;
+let firstTimePlaying = true
 
 let cursorX = 0;
 let cursorY = 0;
@@ -53,7 +55,7 @@ function soundLoaded() {
 /* Modify the basic parameters. */
 const n_parts = 18;
 const n_grid_X = 16, n_grid_Y = 7;
-const sizeX = 1440, sizeY = 900;
+const sizeX = 1565, sizeY = 1000;
 const globalX = 50, globalY = 50; // The margin size. 
 
 /* Defining the objects and arrays according to the basic parameters above. 
@@ -158,7 +160,7 @@ const muted = [false,
               ];
 
 /* Function to draw the GUI. */
-function deriveAttributes() {
+function deriveAttributes() { //draws the orchestra gui
   // Called only in preprocessing. 
   for (let i = units.length - 1; i > -1; --i) {
     unitAttributes[i][0] = globalX + units[i][1] * unitX;
@@ -206,7 +208,7 @@ function drawParts() {
       }
     }
     
-    // Text. 
+    // Text for the GUI (in the rounded rectangles)
     let c = (units[i][4] < 128) ? 255 : 0;
     fill(c, c, c);
     textSize(20);
@@ -268,12 +270,17 @@ function showMasterVolumeSlider() {
 function hideInstrumentSliders() {
   for (let instrument in sliders) {
       sliders[instrument].style('display', 'none');
+      labels[instrument].style('display', 'none');
+      labels["master"].style('display', 'none');
   }
 }
 
 function showInstrumentSliders() {
   for (let instrument in sliders) {
       sliders[instrument].style('display', 'block');
+      labels[instrument].style('display', 'block');
+      labels["master"].style('display', 'block');
+
   }
 }
 
@@ -282,6 +289,7 @@ function showInstrumentSliders() {
 function updateTime() {
   let curTime = millis();
   let timeElapsed = curTime - lastTime;
+  //console.log("curTime" + curTime + " timeElapsed " + timeElapsed + " last time: " + lastTime)
   lastTime = curTime;
   if (isPlaying) playTime += timeElapsed;
 }
@@ -333,36 +341,46 @@ function setup() {
   deriveLookupTable();
 
   /* Create GUI elements */
-  let playButton = createButton('Play All');
-  playButton.position(10, 10);
-  playButton.mousePressed(playAllSounds);
+  // let playButton = createButton('Play All');
+  // playButton.position(10, 10);
+  // playButton.mousePressed(playAllSounds);
 
-  let pauseButton = createButton('Pause All');
-  pauseButton.position(80, 10);
-  pauseButton.mousePressed(pauseAllSounds);
+  // let pauseButton = createButton('Pause All');
+  // pauseButton.position(80, 10);
+  // pauseButton.mousePressed(pauseAllSounds);
 
-  let resumeButton = createButton('Resume All');
-  resumeButton.position(150, 10);
-  resumeButton.mousePressed(resumeAllSounds);
+  // let resumeButton = createButton('Resume All');
+  // resumeButton.position(150, 10);
+  // resumeButton.mousePressed(resumeAllSounds);
 
-  masterVolumeSlider = createSlider(0, 1, 0.5, 0.01); // Min, Max, Initial value, Step
-  masterVolumeSlider.position(150, 40);
-  masterVolumeSlider.input(setMasterVolume);
+  
 
-  let masterLabel = createDiv('Master Volume');
+  
   //masterLabel.position(10, 35);
 
-  let yOffset = 70; // Starting position for individual sliders
+  let yOffset = 90; // Starting position for individual sliders
+
+  //make master slider
+  let masterLabel = createDiv("<h3 style='font-family: Open Sans'>Master Volume</h3>");
+  masterLabel.position(40, yOffset-50);
+  masterVolumeSlider = createSlider(0, 1, 0.5, 0.01); // Min, Max, Initial value, Step
+  masterVolumeSlider.position(200, yOffset-27);
+  masterVolumeSlider.input(setMasterVolume);
+  labels["master"] = masterLabel
+
+  //creates each instrument slider and text next to it
   for (let i = 0; i < texts.length; i++) {
       let instrument = texts[i];
-      
-      let label = createDiv(instrument);
+      // creates the list of instruments
+      let label = createDiv("<h3 style='font-family: Open Sans'>"+instrument+"</h3>");
+      label.position(40, yOffset-20);
+      labels[instrument] = label;
       
       // Set default slider value to 0.7 (70%) for piano, otherwise 0.5 (50%)
       let defaultVolume = (instrument === "Piano") ? 0.7 : 0.5;
       
       let slider = createSlider(0, 1, defaultVolume, 0.01);
-      slider.position(150, yOffset);
+      slider.position(200, yOffset);
       slider.input(() => setVolume(instrument));
       
       sliders[instrument] = slider;
@@ -372,7 +390,7 @@ function setup() {
 
   // Button to hide sliders
   hideSlidersButton = createButton('Hide Sliders');
-  hideSlidersButton.position(10, 70);
+  hideSlidersButton.position(40, 25);
   hideSlidersButton.mousePressed(() => {
       hideMasterVolumeSlider();
       hideInstrumentSliders();
@@ -380,15 +398,15 @@ function setup() {
   
   // Button to show sliders
   showSlidersButton = createButton('Show Sliders');
-  showSlidersButton.position(110, 70);
+  showSlidersButton.position(130, 25);
   showSlidersButton.mousePressed(() => {
       showMasterVolumeSlider();
       showInstrumentSliders();
   });
 
   // Hide all sliders by default
-  hideMasterVolumeSlider();
-  hideInstrumentSliders();
+  //hideMasterVolumeSlider();
+  //hideInstrumentSliders();
   /* Other Settings. */
   //frameRate(60);
 
@@ -397,6 +415,7 @@ function setup() {
 
   /* Initialize Timer. */
   lastTime = millis();
+  startingTime = millis();
 };
 
 function drawDebugInfo() {
@@ -494,12 +513,12 @@ function draw() {
   }
 
   // Adjust volume based on the hand's y position when the gesture is "Open_Palm"
-  if (leftGestureName === "Open_Palm") {
+  if (leftGestureName === "Open_Palm" && rightGestureName != "Pointing_Up") {
     let volume = 1 - (leftHandCursorY / windowHeight); // Normalize y position to volume (0.0 - 1.0)
     masterVolumeSlider.value(volume);
     setMasterVolume();
   }
-  if (rightGestureName === "Open_Palm") {
+  if (rightGestureName === "Open_Palm" && leftGestureName != "Pointing_Up") {
     let volume = 1 - (rightHandCursorY / windowHeight); // Normalize y position to volume (0.0 - 1.0)
     masterVolumeSlider.value(volume);
     setMasterVolume();
@@ -588,12 +607,41 @@ function setAmp(lowerVoice) {
   }
 }
 
+// ---- KEYBOARD SHORTCUT TIME -----
+
+function keyPressed() {
+  if (key === " ") {
+    console.log("pressed space");
+    if (isPaused && firstTimePlaying){
+      playAllSounds();
+    }
+    else if(isPaused){
+      resumeAllSounds();
+    }
+    else{
+      pauseAllSounds();
+    }
+  }
+
+  if (keyCode === ENTER) {
+    console.log("pressed enter")
+    playTime = 0;
+    lastTime = millis();
+    
+  }
+    
+}
+
+// ---- KEYBOARD SHORTCUT TIME OVER -----
+
 
 /* Functions from player start */
 function playAllSounds() {
+  firstTimePlaying = false;
   // Ensure the AudioContext is resumed on user gesture
   if (getAudioContext().state !== 'running') {
     getAudioContext().resume();
+    return
   }
   
   if (allLoaded) {

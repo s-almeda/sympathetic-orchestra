@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       }
-      console.log(results);
+      //console.log(results);
 
       if (results.gestures.length > 0) {
         results.gestures.forEach((gesture, index) => {
